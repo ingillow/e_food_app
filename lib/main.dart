@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:untitled/data/di/category_repos_di.dart';
-import 'package:untitled/data/models/categories_model.dart';
-import 'package:untitled/data/repository/categories_repo.dart';
-import 'package:untitled/presentation/providers/provider_list_categories.dart';
+import 'package:untitled/bloc/bottom_nav_bloc/bottom_nav_bloc.dart';
+import 'package:untitled/bloc/category_bloc/category_food_bloc.dart';
+import 'package:untitled/router/go_route.dart';
 
 
-final getIt = GetIt.instance;
-final userRepository = CategoryRepoFactory.createCategory();
+GetIt sl = GetIt.instance;
 
-void setupLocator() {
-  getIt.registerLazySingleton<CategoriesReposImpl>(() => CategoryRepoFactory.createCategory());
-}
-
+void setupLocator() {}
 
 void main() {
   setupLocator();
@@ -25,95 +20,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home:  MyWidget(),
-    );
-  }
-}
-class MyWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final userRepository = getIt<CategoriesReposImpl>();
-
-    return Scaffold(
-      body: FutureBuilder<Test>(
-        future: userRepository.getCategoryList(),
-        builder: (context, snapshot) {
-        return ListView.builder(itemCount: snapshot.data?.ategories.length ?? 0, itemBuilder: (context, index){
-          return  Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10), // adjust the border radius according to your needs
-                  child: Image.network(
-                    snapshot.data?.ategories[index].imageUrl ?? '',
-                  ),
-                ),
-              ),
-              Positioned(
-              bottom: 70,
-                left: 30,
-                child: Container(
-                  child: Text(
-                    snapshot.data?.ategories[index].name ?? '',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        });
-        },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<CategoryBloc>(
+          create: (BuildContext context) => CategoryBloc(),
+        ),
+        BlocProvider<NavigationBloc>(create: (context) => NavigationBloc())
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        //home: CategoryScreen(),
       ),
     );
   }
 }
-/*class CategoryScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final categoryBloc = BlocProvider.of<CategoryBloc>(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Categories'),
-      ),
-      body: BlocBuilder<CategoryBloc, CategoryState>(
-        builder: (context, state) {
-          if (state is CategoryLoadingState) {
-            return Center(child: CircularProgressIndicator());
-          } else if (state is CategoryLoadedState) {
-            final categories = state.categories;
-            // Отображение списка категорий
-            return ListView.builder(
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                return ListTile(
-                  title: Text(category.categories[index].name ?? ''),
-                  onTap: () {
-                  },
-                );
-              },
-            );
-          } else if (state is CategoryErrorState) {
-            return Text('Error: ${state.errorMessage}');
-          } else {
-            return Container();
-          }
-        },
-      ),
-    );
-  }
-}*/
-

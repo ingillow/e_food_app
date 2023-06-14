@@ -1,19 +1,17 @@
+import 'package:dio/dio.dart';
 import 'package:untitled/data/models/categories_model.dart';
+import 'package:untitled/data/remote/api_service_client.dart';
+import 'package:untitled/data/repository/Irepos_category.dart';
 
-import '../../domain/repositories/categories_repos.dart';
-import '../remote/api_service_client.dart';
+class CategoriesDataRepository  implements IReposCategory{
 
-class CategoriesReposImpl extends ICategoriesRepos {
-  ApiServiceClient apiServiceClient;
-
-  CategoriesReposImpl({required this.apiServiceClient});
+  ApiServiceClient apiServiceClients = ApiServiceClient(Dio());
 
   @override
-  Future<Test> getCategoryList() async {
+  Future<Test> fetchListCategory() async {
     try {
-      final list = await apiServiceClient.getCategoriesList();
-      print(list);
-      return list;
+      final categoryList = await apiServiceClients.getCategoriesList();
+      return categoryList;
     } catch (e) {
       throw Exception(e.toString());
     }
