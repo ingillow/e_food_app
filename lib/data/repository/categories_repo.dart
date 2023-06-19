@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:untitled/data/models/categories_model.dart';
+import 'package:untitled/data/models/dishes.dart';
 import 'package:untitled/data/remote/api_service_client.dart';
 import 'package:untitled/data/repository/Irepos_category.dart';
 
@@ -12,6 +13,16 @@ class CategoriesDataRepository  implements IReposCategory{
     try {
       final categoryList = await apiServiceClients.getCategoriesList();
       return categoryList;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<Dishes> fetchDishes() async {
+    try {
+      final dishesList = await apiServiceClients.getDishesList();
+      return dishesList;
     } catch (e) {
       throw Exception(e.toString());
     }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 import 'package:untitled/bloc/bottom_nav_bloc/bottom_nav_bloc.dart';
 import 'package:untitled/bloc/category_bloc/category_food_bloc.dart';
+import 'package:untitled/bloc/dishes_bloc/dishes_bloc.dart';
+import 'package:untitled/presentation/pages/dishes_page.dart';
+import 'package:untitled/presentation/pages/search_page.dart';
 import 'package:untitled/router/go_route.dart';
-
 
 GetIt sl = GetIt.instance;
 
@@ -25,7 +28,13 @@ class MyApp extends StatelessWidget {
         BlocProvider<CategoryBloc>(
           create: (BuildContext context) => CategoryBloc(),
         ),
-        BlocProvider<NavigationBloc>(create: (context) => NavigationBloc())
+        BlocProvider<NavigationBloc>(create: (context) => NavigationBloc()),
+        BlocProvider(
+          create: (context) => DishFilterBloc(),
+          child:
+              DishesPage(), // Replace YourWidget with your actual widget code
+        ),
+        ChangeNotifierProvider(create: (_) => CartModel(), child: DishesPage())
       ],
       child: MaterialApp.router(
         routerConfig: router,

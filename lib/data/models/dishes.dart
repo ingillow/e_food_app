@@ -28,6 +28,7 @@ class Dish {
   int weight;
   String description;
   String imageUrl;
+  int quantity = 1;
   List<Teg> tegs;
 
   Dish({
