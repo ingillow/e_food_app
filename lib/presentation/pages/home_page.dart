@@ -37,7 +37,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
               return ErrorSWidget();
             } else if (state is CharacterListLoaded) {
               return ListView.builder(
-                itemCount: state.charactersList.categories.length,
+                itemCount: state.testDishes.categories.length,
                 itemBuilder: (context, index) {
                   return Stack(
                     children: [
@@ -47,10 +47,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           borderRadius: BorderRadius.circular(10),
                           child: InkWell(
                             onTap: () {
-                               context.go('/dishes');
+                              context.go('/dishes');
                             },
                             child: Image.network(
-                              state.charactersList.categories[index].imageUrl,
+                              state.testDishes.categories[index].imageUrl,
                             ),
                           ),
                         ),
@@ -59,7 +59,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         bottom: 70,
                         left: 30,
                         child: Text(
-                          state.charactersList.categories[index].name,
+                          state.testDishes.categories[index].name,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.black,

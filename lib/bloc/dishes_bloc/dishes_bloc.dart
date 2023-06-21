@@ -4,13 +4,14 @@ import 'package:untitled/bloc/dishes_bloc/dishes_bloc_state.dart';
 import 'package:untitled/data/models/dishes.dart';
 import 'package:untitled/data/repository/categories_repo.dart';
 
-class DishFilterBloc extends Bloc<DishFilterEvent, DishFilterState> {
+class DishFilterBloc extends Bloc<DishListEvent, DishFilterState> {
   List<Dish> filteredDishes = [];
+  List<Teg> selectedTags = [];
   CategoriesDataRepository categoriesDataRepository =
       CategoriesDataRepository();
 
   DishFilterBloc() : super(DishFilterInitial()) {
-    on<TagSelected>(
+    on<DishListEvent>(
       (event, emit) async {
         emit(DishFilterLoading());
         try {

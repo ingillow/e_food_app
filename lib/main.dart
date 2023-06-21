@@ -6,7 +6,8 @@ import 'package:untitled/bloc/bottom_nav_bloc/bottom_nav_bloc.dart';
 import 'package:untitled/bloc/category_bloc/category_food_bloc.dart';
 import 'package:untitled/bloc/dishes_bloc/dishes_bloc.dart';
 import 'package:untitled/presentation/pages/dishes_page.dart';
-import 'package:untitled/presentation/pages/search_page.dart';
+import 'package:untitled/providers/provider_dish.dart';
+import 'package:untitled/providers/provider_tags.dart';
 import 'package:untitled/router/go_route.dart';
 
 GetIt sl = GetIt.instance;
@@ -32,9 +33,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => DishFilterBloc(),
           child:
-              DishesPage(), // Replace YourWidget with your actual widget code
+              DishesPages(), // Replace YourWidget with your actual widget code
         ),
-        ChangeNotifierProvider(create: (_) => CartModel(), child: DishesPage())
+        ChangeNotifierProvider(
+            create: (_) => ToggleTags(), child: DishesPages()),
+        ChangeNotifierProvider(create: (_) => CartModel(), child: DishesPages())
       ],
       child: MaterialApp.router(
         routerConfig: router,

@@ -10,11 +10,11 @@ abstract class CharacterListState extends Equatable{
 }
 class CharacterListLoading extends CharacterListState{}
 
-class CharacterListLoaded extends CharacterListState{
-  final Test charactersList;
-  CharacterListLoaded(this.charactersList);
-}
+class CharacterListLoaded extends CharacterListState {
+  final Test testDishes;
 
+  CharacterListLoaded(this.testDishes);
+}
 
 class CharacterListError extends CharacterListState{
   CharacterListError(this.messageError);

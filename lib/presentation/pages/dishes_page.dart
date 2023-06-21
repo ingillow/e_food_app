@@ -1,111 +1,73 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:untitled/bloc/dishes_bloc/dishes_bloc.dart';
+import 'package:untitled/bloc/dishes_bloc/dishes_bloc_even.dart';
 import 'package:untitled/data/models/dishes.dart';
-import 'package:untitled/data/remote/api_service_client.dart';
-import 'package:untitled/presentation/pages/search_page.dart';
+import 'package:untitled/presentation/widgets/error_widget.dart';
+import 'package:untitled/providers/provider_dish.dart';
+import 'package:untitled/providers/provider_tags.dart';
 
-class DishesPage extends StatefulWidget {
-  const DishesPage({Key? key}) : super(key: key);
+import '../../bloc/dishes_bloc/dishes_bloc_state.dart';
+
+class DishesPages extends StatefulWidget {
+  const DishesPages({Key? key}) : super(key: key);
 
   @override
-  State<DishesPage> createState() => _DishesPageState();
+  State<DishesPages> createState() => _DishesPagesState();
 }
 
-class _DishesPageState extends State<DishesPage> {
-  ApiServiceClient apiServiceClient = ApiServiceClient(Dio());
-
-  Dio dio = Dio();
-
-  Future<Dishes> fetchDishes() async {
-    try {
-      final resp = await dio
-          .get('https://run.mocky.io/v3/aba7ecaa-0a70-453b-b62d-0e326c859b3b');
-      print(resp.statusCode);
-      final tegList = Dishes.fromJson(resp.data);
-      print('here');
-      return tegList;
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  List<Teg> selectedTags = [];
-
-  void toggleTag(Teg tag) {
-    if (selectedTags.contains(tag)) {
-      selectedTags.remove(tag);
-    } else {
-      selectedTags.add(tag);
-    }
-  }
-
-  bool isDishVisible(Dish? dish) {
-    if (selectedTags.isEmpty) {
-      return true;
-    }
-
-    for (var tag in selectedTags) {
-      if (dish?.tegs.contains(tag) ?? false) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  List<Dish> cart = [];
-
-  void addToCart(Dish? dish) {
-    cart.add(dish!);
-    print('added?');
-  }
-
+class _DishesPagesState extends State<DishesPages> {
   @override
   Widget build(BuildContext context) {
+    var toggleValue = Provider.of<ToggleTags>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dishes'),
+        backgroundColor: Colors.white,
       ),
-      body: FutureBuilder<Dishes>(
-        future: fetchDishes(),
-        builder: (context, snapshot) {
-          print(snapshot.data?.dishes.toString());
-          return Column(
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: tegValues.map.entries.map((e) {
-                      var tag = e.value;
-                      var isSelected = selectedTags.contains(tag);
+      body: BlocProvider(
+        create: (context) => DishFilterBloc()..add(DishListEvent()),
+        child: BlocBuilder<DishFilterBloc, DishFilterState>(
+          builder: (context, state) {
+            if (state is DishFilterLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (state is DishFilterError) {
+              return ErrorSWidget();
+            } else if (state is DishFilterFilteredLoaded) {
+              return Column(children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: tegValues.map.entries.map((e) {
+                        var tag = e.value;
+                        var isSelected = toggleValue.selectedTags.contains(tag);
 
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: FilterChip(
-                          label: Text(e.key),
-                          selected: isSelected,
-                          onSelected: (bool value) {
-                            setState(() {
-                              toggleTag(tag);
-                            });
-                          },
-                        ),
-                      );
-                    }).toList(),
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: FilterChip(
+                            label: Text(e.key),
+                            selected: isSelected,
+                            onSelected: (bool value) {
+                              toggleValue.toggleTag(tag);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: GridView.builder(
-                  itemCount: snapshot.data?.dishes.length,
+                Expanded(
+                    child: GridView.builder(
+                  itemCount: state.dishesList.dishes.length,
                   itemBuilder: (BuildContext context, int index) {
-                    var dish = snapshot.data?.dishes[index];
+                    var dish = state.dishesList.dishes[index];
 
-                    if (!isDishVisible(dish)) {
+                    if (!toggleValue.isDishVisible(dish)) {
                       return SizedBox();
                     }
                     return Padding(
@@ -115,129 +77,129 @@ class _DishesPageState extends State<DishesPage> {
                         children: [
                           Expanded(
                             child: Container(
-                              decoration: BoxDecoration(
-                                  borderRadius:
+                                  decoration: BoxDecoration(
+                                      borderRadius:
                                       BorderRadius.all(Radius.circular(10)),
-                                  color: Colors.grey),
-                              // color: Colors.grey,
-                              child: InkWell(
-                                child: Image.network(
-                                  dish?.imageUrl ?? '',
+                                      color: Colors.grey),
+                                  // color: Colors.grey,
+                                  child: InkWell(
+                                    child: Image.network(
+                                      dish.imageUrl ?? '',
                                   width: double.infinity,
                                   //fit: BoxFit.cover,
                                   height: 300,
                                 ),
-                                onTap: () async {
-                                  return showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return Dialog(
-                                          child: Container(
-                                            width: double.infinity,
-                                            height: 500,
-                                            child: Stack(
-                                              children: [
-                                                Column(
+                                    onTap: () async {
+                                      return showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return Dialog(
+                                              child: Container(
+                                                width: double.infinity,
+                                                height: 500,
+                                                child: Stack(
                                                   children: [
-                                                    Padding(
-                                                      padding:
+                                                    Column(
+                                                      children: [
+                                                        Padding(
+                                                          padding:
                                                           const EdgeInsets.all(
                                                               8.0),
-                                                      child: Image.network(
-                                                        dish?.imageUrl ?? '',
+                                                          child: Image.network(
+                                                            dish.imageUrl ?? '',
                                                         height: 200,
                                                       ),
-                                                    ),
-                                                    Text(
-                                                      dish?.name ?? '',
+                                                        ),
+                                                        Text(
+                                                          dish.name ?? '',
                                                       textAlign: TextAlign.end,
                                                     ),
-                                                    Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: 6,
-                                                        ),
-                                                        Text(
-                                                          dish?.price
+                                                        Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: 6,
+                                                            ),
+                                                            Text(
+                                                              dish.price
                                                                   .toString() ??
-                                                              '',
-                                                          style: TextStyle(
-                                                              fontWeight:
+                                                                  '',
+                                                              style: TextStyle(
+                                                                  fontWeight:
                                                                   FontWeight
                                                                       .bold),
-                                                        ),
-                                                        SizedBox(
-                                                          width: 6,
-                                                        ),
-                                                        Text(
-                                                          dish?.weight
+                                                            ),
+                                                            SizedBox(
+                                                              width: 6,
+                                                            ),
+                                                            Text(
+                                                              dish.weight
                                                                   .toString() ??
-                                                              '',
-                                                          style: TextStyle(
-                                                              fontWeight:
+                                                                  '',
+                                                              style: TextStyle(
+                                                                  fontWeight:
                                                                   FontWeight
                                                                       .bold),
+                                                            ),
+                                                          ],
                                                         ),
-                                                      ],
-                                                    ),
-                                                    Padding(
-                                                      padding:
+                                                        Padding(
+                                                          padding:
                                                           const EdgeInsets.all(
                                                               8.0),
-                                                      child: Text(
-                                                        dish?.description ?? '',
+                                                          child: Text(
+                                                            dish.description ?? '',
                                                         textAlign:
                                                             TextAlign.start,
                                                       ),
-                                                    ),
-                                                    ElevatedButton(
-                                                        onPressed: () {
-                                                          final cartModel =
+                                                        ),
+                                                        ElevatedButton(
+                                                            onPressed: () {
+                                                              final cartModel =
                                                               Provider.of<
-                                                                      CartModel>(
+                                                                  CartModel>(
                                                                   context,
                                                                   listen:
-                                                                      false);
-                                                          cartModel
-                                                              .addToFavorites(
+                                                                  false);
+                                                              cartModel
+                                                                  .addToFavorites(
                                                                   dish!);
-                                                        },
-                                                        child: Text(
-                                                            'Add to favourite'))
+                                                            },
+                                                            child: Text(
+                                                                'Add to favourite'))
+                                                      ],
+                                                    ),
+                                                    Positioned(
+                                                      top: 8,
+                                                      right: 8,
+                                                      child: Row(
+                                                        children: [
+                                                          IconButton(
+                                                            icon: Icon(Icons
+                                                                .favorite_outline),
+                                                            onPressed: () {
+                                                              // Handle edit button pressed
+                                                            },
+                                                          ),
+                                                          IconButton(
+                                                            icon: Icon(Icons.clear),
+                                                            onPressed: () {
+                                                              // Handle delete button pressed
+                                                            },
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
-                                                Positioned(
-                                                  top: 8,
-                                                  right: 8,
-                                                  child: Row(
-                                                    children: [
-                                                      IconButton(
-                                                        icon: Icon(Icons
-                                                            .favorite_outline),
-                                                        onPressed: () {
-                                                          // Handle edit button pressed
-                                                        },
-                                                      ),
-                                                      IconButton(
-                                                        icon: Icon(Icons.clear),
-                                                        onPressed: () {
-                                                          // Handle delete button pressed
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      });
-                                },
+                                              ),
+                                            );
+                                          });
+                                    },
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          Text(
-                            dish?.name ?? '',
+                              Text(
+                                dish.name ?? '',
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
                             maxLines: 2, // Set maximum lines for the text
@@ -252,11 +214,12 @@ class _DishesPageState extends State<DishesPage> {
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                   ),
-                ),
-              ),
-            ],
-          );
-        },
+                ))
+              ]);
+            }
+            return Text('data');
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(onPressed: () {
         context.go('/favs');
@@ -264,3 +227,4 @@ class _DishesPageState extends State<DishesPage> {
     );
   }
 }
+

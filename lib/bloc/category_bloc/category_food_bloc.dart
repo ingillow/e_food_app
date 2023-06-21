@@ -6,7 +6,6 @@ import 'package:untitled/data/repository/categories_repo.dart';
 class CategoryBloc extends Bloc<CharacterListEvent, CharacterListState> {
   CategoriesDataRepository categoriesDataRepository = CategoriesDataRepository();
 
-
   CategoryBloc() : super(CharacterListLoading()) {
     on<LoadCharacterListEvent>(
           (event, emit) async {
